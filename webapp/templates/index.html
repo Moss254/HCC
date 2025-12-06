@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+
+{% block title %}Home - HCC Recurrence Prediction{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section bg-gradient-primary text-white py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">
+                    Predicting Hepatocellular Carcinoma Recurrence with AI
+                </h1>
+                <p class="lead mb-4">
+                    Advanced machine learning system for predicting HCC recurrence risk
+                    using clinical, laboratory, and tumor characteristics. Support early
+                    intervention and personalized patient management.
+                </p>
+                <div class="d-flex gap-3 flex-wrap">
+                    <a href="{{ url_for('predict_page') }}" class="btn btn-light btn-lg fw-bold">
+                        <i class="fas fa-rocket me-2"></i>Start Prediction
+                    </a>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-chart-bar me-2"></i>View Dashboard
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6 text-center">
+                <div class="hero-image">
+                    <i class="fas fa-laptop-medical display-1 text-light opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold mb-3">System Features</h2>
+            <p class="lead text-muted">Comprehensive HCC recurrence prediction capabilities</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-card card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-user-md text-primary fa-3x"></i>
+                        </div>
+                        <h4 class="fw-bold mb-3">Single Patient Prediction</h4>
+                        <p class="text-muted">
+                            Predict recurrence risk for individual patients using comprehensive
+                            clinical data including demographics, lab results, and tumor characteristics.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="feature-card card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-users text-success fa-3x"></i>
+                        </div>
+                        <h4 class="fw-bold mb-3">Batch Processing</h4>
+                        <p class="text-muted">
+                            Process multiple patients simultaneously through CSV or Excel file upload.
+                            Generate comprehensive reports for clinical cohorts.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="feature-card card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-chart-line text-info fa-3x"></i>
+                        </div>
+                        <h4 class="fw-bold mb-3">Model Interpretation</h4>
+                        <p class="text-muted">
+                            Understand model predictions with SHAP explanations and feature
+                            importance analysis. Transparent AI for clinical trust.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Algorithm Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold mb-3">Advanced Machine Learning</h2>
+            <p class="lead text-muted">Multiple algorithms trained and validated for optimal performance</p>
+        </div>
+
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <div class="algorithm-list">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="fas fa-tree text-success fa-2x me-3"></i>
+                        <div>
+                            <h5 class="fw-bold mb-1">Random Forest</h5>
+                            <p class="text-muted mb-0">Ensemble learning with multiple decision trees</p>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="fas fa-chart-bar text-primary fa-2x me-3"></i>
+                        <div>
+                            <h5 class="fw-bold mb-1">XGBoost</h5>
+                            <p class="text-muted mb-0">Gradient boosting with optimized performance</p>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="fas fa-project-diagram text-warning fa-2x me-3"></i>
+                        <div>
+                            <h5 class="fw-bold mb-1">Logistic Regression</h5>
+                            <p class="text-muted mb-0">Statistical model for binary classification</p>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-network-wired text-danger fa-2x me-3"></i>
+                        <div>
+                            <h5 class="fw-bold mb-1">Support Vector Machines</h5>
+                            <p class="text-muted mb-0">Maximum margin classification</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card border-0 shadow">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-3">Model Performance</h5>
+                        <div class="performance-stats">
+                            <div class="row text-center">
+                                <div class="col-6 mb-3">
+                                    <div class="stat-item">
+                                        <h3 class="text-primary fw-bold">0.86</h3>
+                                        <p class="text-muted mb-0">ROC AUC</p>
+                                    </div>
+                                </div>
+                                <div class="col-6 mb-3">
+                                    <div class="stat-item">
+                                        <h3 class="text-success fw-bold">0.82</h3>
+                                        <p class="text-muted mb-0">F1-Score</p>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="stat-item">
+                                        <h3 class="text-info fw-bold">0.85</h3>
+                                        <p class="text-muted mb-0">Accuracy</p>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="stat-item">
+                                        <h3 class="text-warning fw-bold">0.81</h3>
+                                        <p class="text-muted mb-0">Precision</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Clinical Impact Section -->
+<section class="py-5 bg-gradient-primary text-white">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h2 class="fw-bold mb-3">Clinical Decision Support</h2>
+                <p class="lead mb-4">
+                    This system assists clinicians in identifying high-risk HCC patients
+                    for closer monitoring and personalized treatment strategies.
+                </p>
+                <div class="row">
+                    <div class="col-md-6">
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                Early recurrence detection
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                Risk stratification
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                Treatment planning support
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                Resource optimization
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                Patient counseling
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                Follow-up scheduling
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 text-center">
+                <i class="fas fa-stethoscope display-1 opacity-75"></i>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .feature-card {
+        transition: transform 0.3s ease;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,70 @@
+/* Dashboard Specific Styles */
+
+/* --- Metric Cards --- */
+.card {
+    /* Ensure cards match the height of their neighbors */
+    height: 100%;
+}
+
+.display-6 {
+    font-size: 2.5rem;
+    letter-spacing: -1px;
+    color: var(--dark-bg);
+}
+
+/* Add subtle zoom effect to metric cards on hover */
+.card:hover .display-6 {
+    transform: scale(1.05);
+    transition: transform 0.3s ease;
+    display: inline-block;
+}
+
+/* --- Chart Container --- */
+canvas#featureChart {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 300px;
+    max-height: 400px;
+}
+
+/* --- Clinical Insights Lists --- */
+.list-group-item {
+    border-left: none;
+    border-right: none;
+    padding-left: 0;
+    padding-right: 0;
+    background-color: transparent;
+}
+
+.list-group-item i {
+    margin-top: 3px;
+    /* Align icon with text top */
+}
+
+/* --- Loading State --- */
+#loading {
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    opacity: 1;
+    transition: opacity 0.3s ease-out;
+}
+
+/* --- Animations --- */
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

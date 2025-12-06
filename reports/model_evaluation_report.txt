@@ -1,0 +1,60 @@
+
+HCC RECURRENCE PREDICTION MODEL EVALUATION REPORT
+===================================================
+
+Dataset Information:
+-------------------
+- Total samples: 204
+- Features: 50
+- Train samples: 163
+- Test samples: 41
+
+Target Distribution:
+-------------------
+Class
+1    102
+0    102
+
+Model Performance:
+-----------------
+
+RandomForest:
+  - Cross-Validation ROC-AUC: 0.866 (+/- 0.056)
+  - Test ROC-AUC: 0.933
+
+GradientBoosting:
+  - Cross-Validation ROC-AUC: 0.782 (+/- 0.089)
+  - Test ROC-AUC: 0.917
+
+LogisticRegression:
+  - Cross-Validation ROC-AUC: 0.821 (+/- 0.081)
+  - Test ROC-AUC: 0.864
+
+Best Model: RandomForest
+- Test ROC-AUC: 0.933
+- Cross-Validation Score: 0.866
+
+SHAP Analysis:
+-------------
+- Expected value (baseline): 0.5071
+- Top features analyzed using SHAP values
+- Visualizations saved to '../reports/' directory
+
+Files Saved:
+-----------
+1. ../models/trained_models/best_model.pkl
+2. ../models/preprocessing/preprocessor.pkl
+3. ../reports/shap_summary_plot.png
+4. ../reports/shap_bar_plot.png
+5. ../reports/shap_feature_importance.png
+6. ../reports/roc_curves.png
+7. ../reports/confusion_matrix.png
+8. ../reports/feature_importance.png
+9. ../reports/probability_distributions.png
+
+Next Steps:
+----------
+1. The model is ready for deployment in the Flask web application
+2. Use the saved model files in the webapp directory
+3. Monitor model performance on new data
+4. Retrain periodically with updated data

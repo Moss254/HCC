@@ -1,0 +1,98 @@
+# HCC Recurrence Prediction System Configuration
+
+project:
+  name: "HCC Recurrence Prediction System"
+  version: "1.0.0"
+  author: "Moses Wekesa Kutukhulu"
+  institution: "Dedan Kimathi University of Technology"
+
+data:
+  raw_path: "data/raw/hcc-data-complete-balanced.xlsx"
+  processed_path: "data/processed/"
+  external_data_sources:
+    - "NHANES"
+    - "TCIA LI-RADS"
+    - "Kaggle HCC Datasets"
+
+preprocessing:
+  test_size: 0.2
+  random_state: 42
+  validation_size: 0.15
+  feature_selection:
+    method: "recursive"
+    n_features: 25
+
+models:
+  algorithms:
+    - "logistic_regression"
+    - "random_forest"
+    - "xgboost"
+    - "svm"
+    - "gradient_boosting"
+
+  hyperparameters:
+    logistic_regression:
+      C: [0.1, 1, 10, 100]
+      penalty: ["l1", "l2"]
+      solver: ["liblinear"]
+
+    random_forest:
+      n_estimators: [100, 200, 300]
+      max_depth: [5, 10, 15, None]
+      min_samples_split: [2, 5, 10]
+      min_samples_leaf: [1, 2, 4]
+
+    xgboost:
+      n_estimators: [100, 200, 300]
+      max_depth: [3, 5, 7]
+      learning_rate: [0.01, 0.1, 0.2]
+      subsample: [0.8, 0.9, 1.0]
+
+evaluation:
+  metrics:
+    - "accuracy"
+    - "precision"
+    - "recall"
+    - "f1"
+    - "roc_auc"
+    - "pr_auc"
+  cv_folds: 5
+  scoring: "roc_auc"
+
+webapp:
+  host: "0.0.0.0"
+  port: 5000
+  debug: true
+  secret_key: "hcc_recurrence_prediction_secret_2024"
+
+  features:
+    demographic:
+      - "Age"
+      - "Gender"
+    clinical:
+      - "Symptoms"
+      - "PS"
+      - "Encephalopathy"
+      - "Ascites"
+    laboratory:
+      - "AFP"
+      - "ALT"
+      - "AST"
+      - "Albumin"
+      - "Total_Bil"
+      - "INR"
+      - "Platelets"
+    tumor:
+      - "Nodules"
+      - "Major_Dim"
+
+deployment:
+  model_path: "models/trained_models/"
+  preprocessor_path: "models/preprocessing/"
+  performance_path: "models/model_performance/"
+  log_path: "logs/"
+
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/hcc_system.log"

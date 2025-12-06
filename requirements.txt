@@ -1,0 +1,25 @@
+Flask
+Flask-CORS
+gunicorn
+
+# Let Pip find the compatible versions for your Python
+numpy
+pandas
+openpyxl
+scipy
+
+# Machine Learning
+scikit-learn
+xgboost
+joblib
+
+# Visualization & Others
+shap
+lime
+matplotlib
+seaborn
+plotly
+python-dotenv
+Werkzeug
+Jinja2
+threadpoolctl
