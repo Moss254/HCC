@@ -249,7 +249,7 @@
             "auc_std": 0.029249356915375377
         }
     },
-    "training_date": "2025-12-11T12:35:50.172067",
+    "training_date": "2025-12-12T19:43:37.504484",
     "model_parameters": {
         "Random Forest": {
             "max_depth": 5,

@@ -18,7 +18,6 @@ class HCCDataPreprocessor:
     FIXED Data Preprocessor - Robust feature engineering and preprocessing
     Aligned with notebook analysis
     """
-
     def __init__(self, config: Dict[str, Any] = None):
         self.config = config or {}
         self.feature_names = []
@@ -73,7 +72,7 @@ class HCCDataPreprocessor:
     
     def engineer_features(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Create clinically relevant derived features
+         clinically relevant derived features
         Aligned with notebook feature engineering
         """
         df_eng = df.copy()
@@ -162,54 +161,80 @@ class HCCDataPreprocessor:
         return preprocessor
     
     def encode_and_scale(self, df: pd.DataFrame) -> Tuple[np.ndarray, pd.Series]:
-        """
-        Encode categorical variables and scale numerical ones
-        Returns processed features and target
-        """
+        """Encode categorical variables and scale numerical ones
+        Returns processed features and target"""
         logger.info("Starting feature encoding and scaling...")
-        
+    
         # Separate target
         if 'Class' not in df.columns:
-            raise ValueError("Target column 'Class' not found in data")
-            
+         raise ValueError("Target column 'Class' not found in data")
+        
         X = df.drop(columns=['Class'])
         y = df['Class']
-        
+    
         # Identify feature types
-        categorical_cols, numerical_cols = self.identify_feature_types(X)
-        
+        categorical_cols, numerical_cols = self. identify_feature_types(X)
+    
+        # Store for later use
+        self.categorical_features = categorical_cols
+        self. numerical_features = numerical_cols
+    
         logger.info(f"Categorical features: {len(categorical_cols)}")
         logger.info(f"Numerical features: {len(numerical_cols)}")
-        
+    
         # Create and fit preprocessor
         self.final_pipeline = self.create_preprocessing_pipeline(categorical_cols, numerical_cols)
         X_processed = self.final_pipeline.fit_transform(X)
-        
-        # Get feature names
+    
+        # Get feature names AFTER fitting (this is the fix!)
         self._extract_feature_names(categorical_cols, numerical_cols)
-        
+    
         self.fitted = True
         logger.info(f" Final feature count: {len(self.feature_names)}")
         logger.info(f" Processed data shape: {X_processed.shape}")
-        
-        return X_processed, y
     
+        return X_processed, y
+
     def _extract_feature_names(self, categorical_cols: list, numerical_cols: list):
-        """Extract feature names after one-hot encoding"""
+        """Extract feature names from the fitted pipeline"""
         try:
-            # Get one-hot encoded feature names
-            ohe = self.final_pipeline.named_transformers_['cat'].named_steps['onehot']
-            ohe_features = ohe.get_feature_names_out(categorical_cols).tolist()
+            # Check if pipeline is fitted
+            if not hasattr(self. final_pipeline, 'transformers_'):
+               logger.warning("Pipeline not fitted yet, using basic feature names")
+               self.feature_names = numerical_cols + categorical_cols
+               return
             
-            # Combine with numerical features
-            self.feature_names = numerical_cols + ohe_features
+            # Get one-hot encoded feature names from the fitted transformer
+            if 'cat' in self.final_pipeline.named_transformers_: 
+                cat_transformer = self.final_pipeline.named_transformers_['cat']
             
+                 # Check if the categorical transformer has the onehot step and it's fitted
+                if hasattr(cat_transformer, 'named_steps') and 'onehot' in cat_transformer.named_steps:
+                    ohe = cat_transformer.named_steps['onehot']
+                
+                    # Only get feature names if the encoder is fitted
+                    if hasattr(ohe, 'categories_'):
+                        ohe_features = ohe.get_feature_names_out(categorical_cols).tolist()
+                        self.feature_names = numerical_cols + ohe_features
+                        logger.info(f" Extracted {len(ohe_features)} one-hot encoded feature names")
+                        return
+        
+            # Fallback:  try to get feature names from the pipeline directly
+            if hasattr(self. final_pipeline, 'get_feature_names_out'):
+                self.feature_names = list(self.final_pipeline.get_feature_names_out())
+                logger.info(f" Extracted feature names from pipeline: {len(self.feature_names)}")
+                return
+            
+            # Final fallback: use numerical + categorical
+            self.feature_names = numerical_cols + categorical_cols
+            logger.info(f" Using basic feature names:  {len(self.feature_names)}")
+        
         except Exception as e:
             logger.warning(f"Could not extract feature names properly: {e}")
-            # Fallback: create generic feature names
-            total_features = self.final_pipeline.transformers_[0][2] + self.final_pipeline.transformers_[1][2]
-            self.feature_names = [f"feature_{i}" for i in range(len(total_features))]
-    
+            # Fallback: create generic feature names based on processed data shape
+            self.feature_names = numerical_cols + [f"cat_{i}" for i in range(len(categorical_cols) * 2)]
+            logger.info(f" Using fallback feature names: {len(self.feature_names)}")
+
     def prepare_training_data(self, X: np.ndarray, y: pd.Series, test_size: float = 0.2):
         """Split data into train and test sets"""
         return train_test_split(
