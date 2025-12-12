@@ -47,7 +47,7 @@ class HCCModelInterpreter:
         """Generate comprehensive interpretation report"""
         fig, axes = plt.subplots(2, 2, figsize=(15, 12))
         
-        # 1. Feature Importance
+        # 1. Feature Importanc
         importance_df = self.get_feature_importance(X_test, y_test)
         if importance_df is not None:
             top_features = importance_df.head(10)

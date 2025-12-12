@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 class HCCModelTrainer:
     """
     Robust model training with comprehensive evaluation
-    Aligned with notebook analysis and preprocessing
+    Aligned with notebook analysis and preprocesing
     """
     
     def __init__(self):

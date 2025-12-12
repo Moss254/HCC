@@ -36,7 +36,7 @@ def main():
     # 3. Smart Training Check
     model_exists = os.path.exists("models/trained_models/best_model.pkl")
     if not model_exists:
-        print("  Model not found. Training now...")
+        print("  Model not found. Training now....")
         run_command("python src/data/preprocessing.py", "Preprocessing")
         run_command("python src/models/train_model.py", "Training")
     else:

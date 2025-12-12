@@ -120,7 +120,7 @@ class HCCDataPreprocessor:
         categorical_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
         numerical_cols = df.select_dtypes(include=[np.number]).columns.tolist()
         
-        # Remove target variable and engineered features that should be numerical
+        # Remove target variable and engineered features that should be numeric
         if 'Class' in numerical_cols:
             numerical_cols.remove('Class')
             

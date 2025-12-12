@@ -52,7 +52,7 @@ def main():
         save_path='models/trained_models/'
     )
 
-    # Display comprehensive results
+    # Display comprehensive result
     print("\n" + "=" * 60)
     print(" COMPREHENSIVE MODEL PERFORMANCE RESULTS")
     print("=" * 60)

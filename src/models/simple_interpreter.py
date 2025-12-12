@@ -23,7 +23,7 @@ class SimpleModelInterpreter:
         """
         Calculate permutation importance with reduced repetitions
         """
-        logger.info("Calculating permutation importance...")
+        logger.info("Calculating permutation importance.....")
         
         try:
             perm_importance = permutation_importance(
