@@ -1,0 +1,518 @@
+{% extends "base.html" %}
+
+{% block title %}Help & Documentation - HCC Prediction System{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header -->
+    <div class="text-center mb-5">
+        <h1 class="display-5 fw-bold">
+            <i class="fas fa-question-circle text-primary me-3"></i>Help & Documentation
+        </h1>
+        <p class="lead text-muted">Learn how to use the HCC Recurrence Prediction System</p>
+    </div>
+
+    <!-- Quick Navigation -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3">Quick Navigation</h5>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="#getting-started" class="btn btn-outline-primary btn-sm">Getting Started</a>
+                        <a href="#single-prediction" class="btn btn-outline-primary btn-sm">Single Prediction</a>
+                        <a href="#batch-prediction" class="btn btn-outline-primary btn-sm">Batch Prediction</a>
+                        <a href="#understanding-shap" class="btn btn-outline-primary btn-sm">Understanding SHAP</a>
+                        <a href="#risk-levels" class="btn btn-outline-primary btn-sm">Risk Levels</a>
+                        <a href="#clinical-features" class="btn btn-outline-primary btn-sm">Clinical Features</a>
+                        <a href="#faq" class="btn btn-outline-primary btn-sm">FAQ</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Getting Started -->
+    <section id="getting-started" class="mb-5">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-rocket me-2"></i>Getting Started</h4>
+            </div>
+            <div class="card-body">
+                <p>The HCC Recurrence Prediction System uses machine learning to estimate the probability of
+                    hepatocellular carcinoma recurrence after treatment.</p>
+
+                <h5 class="fw-bold mt-4">System Capabilities</h5>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-start mb-3">
+                            <i class="fas fa-user-md fa-2x text-primary me-3"></i>
+                            <div>
+                                <h6 class="fw-bold">Single Prediction</h6>
+                                <p class="text-muted small mb-0">Assess individual patient risk with detailed
+                                    explanations</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-start mb-3">
+                            <i class="fas fa-users fa-2x text-success me-3"></i>
+                            <div>
+                                <h6 class="fw-bold">Batch Processing</h6>
+                                <p class="text-muted small mb-0">Process multiple patients via CSV/Excel upload</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-start mb-3">
+                            <i class="fas fa-brain fa-2x text-info me-3"></i>
+                            <div>
+                                <h6 class="fw-bold">AI Explanations</h6>
+                                <p class="text-muted small mb-0">SHAP-based feature importance visualization</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Single Prediction Guide -->
+    <section id="single-prediction" class="mb-5">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0"><i class="fas fa-user me-2"></i>Single Patient Prediction</h4>
+            </div>
+            <div class="card-body">
+                <h5 class="fw-bold">Step-by-Step Guide</h5>
+
+                <div class="accordion" id="singlePredictionSteps">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#step1">
+                                <span class="badge bg-primary me-2">1</span> Enter Demographic Information
+                            </button>
+                        </h2>
+                        <div id="step1" class="accordion-collapse collapse show"
+                            data-bs-parent="#singlePredictionSteps">
+                            <div class="accordion-body">
+                                <ul>
+                                    <li><strong>Age:</strong> Patient's age in years (required)</li>
+                                    <li><strong>Gender:</strong> Male or Female</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#step2">
+                                <span class="badge bg-primary me-2">2</span> Enter Laboratory Values
+                            </button>
+                        </h2>
+                        <div id="step2" class="accordion-collapse collapse" data-bs-parent="#singlePredictionSteps">
+                            <div class="accordion-body">
+                                <ul>
+                                    <li><strong>AFP (ng/mL):</strong> Alpha-fetoprotein level (required) - main tumor
+                                        marker</li>
+                                    <li><strong>Albumin (g/dL):</strong> Serum albumin - liver synthetic function</li>
+                                    <li><strong>Total Bilirubin: </strong> Liver excretory function</li>
+                                    <li><strong>ALT/AST (U/L):</strong> Liver inflammation markers</li>
+                                </ul>
+                                <div class="alert alert-info mt-3">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Tip:</strong> AFP > 400 ng/mL is a significant risk factor for recurrence.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#step3">
+                                <span class="badge bg-primary me-2">3</span> Enter Tumor Characteristics
+                            </button>
+                        </h2>
+                        <div id="step3" class="accordion-collapse collapse" data-bs-parent="#singlePredictionSteps">
+                            <div class="accordion-body">
+                                <ul>
+                                    <li><strong>Major Tumor Dimension (cm):</strong> Largest tumor diameter (required)
+                                    </li>
+                                    <li><strong>Number of Nodules:</strong> Total tumor count</li>
+                                </ul>
+                                <div class="alert alert-warning mt-3">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <strong>Note:</strong> Tumors > 5 cm are associated with higher recurrence risk.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#step4">
+                                <span class="badge bg-primary me-2">4</span> Enter Comorbidities
+                            </button>
+                        </h2>
+                        <div id="step4" class="accordion-collapse collapse" data-bs-parent="#singlePredictionSteps">
+                            <div class="accordion-body">
+                                <ul>
+                                    <li><strong>Cirrhosis:</strong> Presence of liver cirrhosis</li>
+                                    <li><strong>Hepatitis B (HBsAg):</strong> Active hepatitis B infection</li>
+                                    <li><strong>Hepatitis C (HCVAb):</strong> Hepatitis C antibody status</li>
+                                    <li><strong>Diabetes: </strong> Diabetes mellitus</li>
+                                    <li><strong>Alcohol/Smoking:</strong> Lifestyle risk factors</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#step5">
+                                <span class="badge bg-primary me-2">5</span> Review Results
+                            </button>
+                        </h2>
+                        <div id="step5" class="accordion-collapse collapse" data-bs-parent="#singlePredictionSteps">
+                            <div class="accordion-body">
+                                <p>After submitting, you'll receive: </p>
+                                <ul>
+                                    <li><strong>Risk Probability:</strong> Percentage likelihood of recurrence</li>
+                                    <li><strong>Risk Level:</strong> Low, Medium, or High classification</li>
+                                    <li><strong>SHAP Analysis:</strong> Visual explanation of contributing factors</li>
+                                    <li><strong>Recommendations: </strong> Clinical follow-up guidelines</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Understanding SHAP -->
+    <section id="understanding-shap" class="mb-5">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-info text-white">
+                <h4 class="mb-0"><i class="fas fa-brain me-2"></i>Understanding SHAP Explanations</h4>
+            </div>
+            <div class="card-body">
+                <h5 class="fw-bold">What is SHAP? </h5>
+                <p>SHAP (SHapley Additive exPlanations) is a method to explain machine learning predictions. It shows
+                    how each patient characteristic (feature) contributes to the final risk assessment.</p>
+
+                <h5 class="fw-bold mt-4">How to Read the SHAP Chart</h5>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="fw-bold text-danger"><i class="fas fa-arrow-up me-2"></i>Red Bars</h6>
+                                <p class="mb-0">Features that <strong>increase</strong> recurrence risk. Longer red bars
+                                    mean stronger positive contribution to risk.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="fw-bold text-success"><i class="fas fa-arrow-down me-2"></i>Green Bars</h6>
+                                <p class="mb-0">Features that <strong>decrease</strong> recurrence risk. Longer green
+                                    bars mean stronger protective effect.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h5 class="fw-bold mt-4">Example Interpretation</h5>
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Feature</th>
+                                <th>SHAP Value</th>
+                                <th>Direction</th>
+                                <th>Interpretation</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>AFP = 850 ng/mL</td>
+                                <td>+0.24</td>
+                                <td><span class="badge bg-danger">↑ Risk</span></td>
+                                <td>Very high AFP strongly increases predicted risk</td>
+                            </tr>
+                            <tr>
+                                <td>Cirrhosis = Present</td>
+                                <td>+0.18</td>
+                                <td><span class="badge bg-danger">↑ Risk</span></td>
+                                <td>Underlying cirrhosis adds significant risk</td>
+                            </tr>
+                            <tr>
+                                <td>Albumin = 4.2 g/dL</td>
+                                <td>-0.10</td>
+                                <td><span class="badge bg-success">↓ Risk</span></td>
+                                <td>Good liver function provides some protection</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h5 class="fw-bold mt-4">Base Value Explained</h5>
+                <p>The <strong>base value</strong> shown on the chart represents the average prediction across all
+                    patients in the training data. Think of it as the "starting point" before considering this specific
+                    patient's characteristics.</p>
+
+                <div class="alert alert-primary">
+                    <i class="fas fa-calculator me-2"></i>
+                    <strong>Calculation:</strong> Final Probability = Base Value + Sum of all SHAP values
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Risk Levels -->
+    <section id="risk-levels" class="mb-5">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-warning">
+                <h4 class="mb-0"><i class="fas fa-layer-group me-2"></i>Risk Level Stratification</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card border-success mb-3">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Low Risk (&lt;40%)</h5>
+                            </div>
+                            <div class="card-body">
+                                <h6 class="fw-bold">Recommended Actions: </h6>
+                                <ul class="small">
+                                    <li>Annual surveillance imaging</li>
+                                    <li>AFP testing every 6 months</li>
+                                    <li>Routine follow-up visits</li>
+                                    <li>Continue current liver disease management</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-warning mb-3">
+                            <div class="card-header bg-warning">
+                                <h5 class="mb-0"><i class="fas fa-exclamation-circle me-2"></i>Medium Risk (40-70%)</h5>
+                            </div>
+                            <div class="card-body">
+                                <h6 class="fw-bold">Recommended Actions:</h6>
+                                <ul class="small">
+                                    <li>Imaging every 3-6 months</li>
+                                    <li>Quarterly AFP monitoring</li>
+                                    <li>Regular hepatologist follow-up</li>
+                                    <li>Address modifiable risk factors</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-danger mb-3">
+                            <div class="card-header bg-danger text-white">
+                                <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>High Risk (&gt;70%)
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <h6 class="fw-bold">Recommended Actions:</h6>
+                                <ul class="small">
+                                    <li>Urgent imaging within 4-6 weeks</li>
+                                    <li>Monthly AFP monitoring</li>
+                                    <li>Multidisciplinary team review</li>
+                                    <li>Consider adjuvant therapy</li>
+                                    <li>Evaluate transplant eligibility</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Clinical Features Reference -->
+    <section id="clinical-features" class="mb-5">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-secondary text-white">
+                <h4 class="mb-0"><i class="fas fa-list-alt me-2"></i>Clinical Features Reference</h4>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Feature</th>
+                                <th>Description</th>
+                                <th>Normal Range</th>
+                                <th>Risk Threshold</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>AFP</strong></td>
+                                <td>Alpha-fetoprotein (tumor marker)</td>
+                                <td>&lt;10 ng/mL</td>
+                                <td class="text-danger">&gt;400 ng/mL = High Risk</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Age</strong></td>
+                                <td>Patient age in years</td>
+                                <td>N/A</td>
+                                <td class="text-warning">&gt;65 years = Elevated Risk</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Major_Dim</strong></td>
+                                <td>Largest tumor diameter</td>
+                                <td>N/A</td>
+                                <td class="text-danger">&gt;5 cm = High Risk</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Albumin</strong></td>
+                                <td>Serum albumin (liver function)</td>
+                                <td>3.5-5.0 g/dL</td>
+                                <td class="text-warning">&lt;3.5 g/dL = Impaired</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Total_Bil</strong></td>
+                                <td>Total bilirubin</td>
+                                <td>0.1-1.2 mg/dL</td>
+                                <td class="text-warning">&gt;2.0 mg/dL = Elevated</td>
+                            </tr>
+                            <tr>
+                                <td><strong>INR</strong></td>
+                                <td>International Normalized Ratio</td>
+                                <td>0.8-1.2</td>
+                                <td class="text-warning">&gt;1.5 = Coagulopathy</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Cirrhosis</strong></td>
+                                <td>Presence of liver cirrhosis</td>
+                                <td>Absent</td>
+                                <td class="text-danger">Present = High Risk</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="mb-5">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h4 class="mb-0"><i class="fas fa-question-circle me-2"></i>Frequently Asked Questions</h4>
+            </div>
+            <div class="card-body">
+                <div class="accordion" id="faqAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#faq1">
+                                How accurate is this prediction system?
+                            </button>
+                        </h2>
+                        <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                The system achieves approximately 85-90% accuracy with an ROC-AUC of 0.86-0.94 depending
+                                on the data. However, <strong>this is a decision support tool</strong> and should not
+                                replace clinical judgment. Predictions should be considered alongside all available
+                                clinical information.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#faq2">
+                                What if some laboratory values are missing?
+                            </button>
+                        </h2>
+                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                The system can handle missing values by using default values (typically 0 or population
+                                averages). However, for the most accurate predictions, provide as much data as possible.
+                                Required fields (Age, AFP, Major_Dim) must be filled.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#faq3">
+                                Why do different features have different impact levels?
+                            </button>
+                        </h2>
+                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                SHAP values are calculated for <strong>each individual patient</strong>. The same
+                                feature may have different impacts depending on its value and the combination of other
+                                features. For example, AFP of 500 ng/mL will have higher impact than AFP of 50 ng/mL.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#faq4">
+                                Can I use this for clinical decision-making?
+                            </button>
+                        </h2>
+                        <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                This tool is designed for <strong>clinical decision support</strong>, not replacement of
+                                clinical judgment. Always consider predictions in the context of:
+                                <ul>
+                                    <li>Complete patient history</li>
+                                    <li>Physical examination findings</li>
+                                    <li>Additional imaging or tests</li>
+                                    <li>Patient preferences and goals of care</li>
+                                    <li>Institutional protocols</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#faq5">
+                                How often is the model updated?
+                            </button>
+                        </h2>
+                        <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                The model can be retrained with new data by re-running the training pipeline. It's
+                                recommended to retrain periodically as new patient outcomes become available to maintain
+                                accuracy.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Disclaimer -->
+    <div class="alert alert-warning">
+        <h5 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>Important Disclaimer</h5>
+        <hr>
+        <p class="mb-0">This prediction system is intended for <strong>educational and research purposes</strong> and to
+            support clinical decision-making. It should not be used as the sole basis for patient care
+            decisions. Always consult with qualified healthcare professionals for medical advice and treatment
+            decisions.</p>
+    </div>
+</div>
+{% endblock %}
