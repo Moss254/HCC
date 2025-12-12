@@ -189,8 +189,8 @@ class HCCDataPreprocessor:
         self._extract_feature_names(categorical_cols, numerical_cols)
         
         self.fitted = True
-        logger.info(f"✅ Final feature count: {len(self.feature_names)}")
-        logger.info(f"✅ Processed data shape: {X_processed.shape}")
+        logger.info(f" Final feature count: {len(self.feature_names)}")
+        logger.info(f" Processed data shape: {X_processed.shape}")
         
         return X_processed, y
     
@@ -241,7 +241,7 @@ class HCCDataPreprocessor:
         feature_df = pd.DataFrame({'feature_name': self.feature_names})
         feature_df.to_csv(os.path.join(save_path, 'feature_list.csv'), index=False)
         
-        logger.info(f"✅ Preprocessor saved with {len(self.feature_names)} features")
+        logger.info(f" Preprocessor saved with {len(self.feature_names)} features")
     
     def get_feature_names(self):
         """Get feature names after fitting"""

@@ -40,11 +40,11 @@ class SimpleModelInterpreter:
                 'importance_std': perm_importance.importances_std
             }).sort_values('importance_mean', ascending=False)
             
-            logger.info("✅ Permutation importance calculated successfully")
+            logger.info(" Permutation importance calculated successfully")
             return importance_df
             
         except Exception as e:
-            logger.error(f"❌ Error calculating permutation importance: {e}")
+            logger.error(f" Error calculating permutation importance: {e}")
             return None
     
     def plot_feature_importance(self, X_test, y_test, top_n=15, save_path=None):
@@ -87,7 +87,7 @@ class SimpleModelInterpreter:
         
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
-            logger.info(f"✅ Feature importance plot saved to {save_path}")
+            logger.info(f" Feature importance plot saved to {save_path}")
         
         plt.show()
         return fig

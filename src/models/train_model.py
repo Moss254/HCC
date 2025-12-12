@@ -23,7 +23,7 @@ def main():
     print("=" * 80)
 
     # Load and preprocess data
-    print("📊 Loading and preprocessing data...")
+    print(" Loading and preprocessing data...")
 
     preprocessor = HCCDataPreprocessor()
     X_train, X_test, y_train, y_test, df_processed = preprocessor.full_preprocessing_pipeline(
@@ -31,18 +31,18 @@ def main():
         save_path='models/preprocessing/'
     )
 
-    print(f"✅ Data preprocessing completed!")
-    print(f"📈 Training set: {X_train.shape}")
-    print(f"📊 Test set: {X_test.shape}")
-    print(f"🎯 Class distribution - Train: {pd.Series(y_train).value_counts().to_dict()}")
-    print(f"🎯 Class distribution - Test: {pd.Series(y_test).value_counts().to_dict()}")
+    print(f" Data preprocessing completed!")
+    print(f" Training set: {X_train.shape}")
+    print(f" Test set: {X_test.shape}")
+    print(f" Class distribution - Train: {pd.Series(y_train).value_counts().to_dict()}")
+    print(f" Class distribution - Test: {pd.Series(y_test).value_counts().to_dict()}")
 
     # Initialize model trainer
-    print("\n🤖 Initializing model trainer...")
+    print("\n Initializing model trainer...")
     model_trainer = HCCModelTrainer()
 
     # Execute complete training pipeline
-    print("\n🚀 Starting complete model training pipeline...")
+    print("\n Starting complete model training pipeline...")
 
     best_model_name, best_model = model_trainer.full_training_pipeline(
         X_train=X_train, 
@@ -54,7 +54,7 @@ def main():
 
     # Display comprehensive results
     print("\n" + "=" * 60)
-    print("📊 COMPREHENSIVE MODEL PERFORMANCE RESULTS")
+    print(" COMPREHENSIVE MODEL PERFORMANCE RESULTS")
     print("=" * 60)
 
     performance_results = model_trainer.model_performance
@@ -80,7 +80,7 @@ def main():
 
     # Best model details
     print("\n" + "=" * 50)
-    print("🏆 BEST MODEL IDENTIFIED")
+    print(" BEST MODEL IDENTIFIED")
     print("=" * 50)
     print(f"Best Model: {model_trainer.best_model_name}")
     print(f"ROC AUC Score: {performance_results[model_trainer.best_model_name]['roc_auc']:.4f}")
@@ -88,7 +88,7 @@ def main():
 
     # Model Interpretation
     print("\n" + "=" * 50)
-    print("🔍 MODEL INTERPRETATION & FEATURE ANALYSIS")
+    print(" MODEL INTERPRETATION & FEATURE ANALYSIS")
     print("=" * 50)
 
     # Initialize interpreter
@@ -106,7 +106,7 @@ def main():
     )
 
     # Feature Importance Analysis
-    print("\n📈 Top 10 Most Important Features:")
+    print("\n Top 10 Most Important Features:")
 
     # Get permutation importance
     perm_importance = interpreter.get_feature_importance(X_test, y_test)
@@ -115,7 +115,7 @@ def main():
 
     # Clinical Insights
     print("\n" + "=" * 50)
-    print("💡 CLINICAL INSIGHTS & RECOMMENDATIONS")
+    print(" CLINICAL INSIGHTS & RECOMMENDATIONS")
     print("=" * 50)
 
     if perm_importance is not None:
@@ -128,12 +128,12 @@ def main():
     print("\n" + "=" * 80)
     print("PHASE 2 COMPLETED: MODEL TRAINING & COMPARISON")
     print("=" * 80)
-    print("📋 Key Achievements:")
+    print(" Key Achievements:")
     print(f"• Trained and compared {len(model_trainer.models)} different algorithms")
     print(f"• Best model: {model_trainer.best_model_name} with AUC: {performance_results[model_trainer.best_model_name]['roc_auc']:.4f}")
     print(f"• Comprehensive model interpretation provided")
     print(f"• All models saved for deployment")
-    print("➡️ Next: Web Application Development & Deployment")
+    print(" Next: Web Application Development & Deployment")
 
 if __name__ == "__main__":
     main()

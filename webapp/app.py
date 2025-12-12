@@ -856,7 +856,7 @@ class HCCPredictionSystem:
                 if not data:
                     return jsonify({"success": False, "error": "No JSON data received"}), 400
                     
-                print(f"📋 Received data with keys: {list(data.keys())}")
+                print(f" Received data with keys: {list(data.keys())}")
                 result = self.predictor.predict_with_confidence(data)
                 return jsonify(result)
             except Exception as e:

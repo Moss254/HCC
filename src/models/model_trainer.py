@@ -328,7 +328,7 @@ class HCCModelTrainer:
             if save_path:
                 self.save_models_and_results(save_path, best_name, best_model)
             
-            logger.info("✅ Training pipeline completed successfully!")
+            logger.info(" Training pipeline completed successfully!")
             
             return best_name, best_model
             
@@ -368,7 +368,7 @@ class HCCModelTrainer:
             os.path.join(save_path, "performance_comparison.png")
         )
         
-        logger.info(f"✅ Models and results saved to {save_path}")
+        logger.info(f" Models and results saved to {save_path}")
 
 
 # Example usage

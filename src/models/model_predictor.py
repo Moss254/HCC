@@ -478,7 +478,7 @@ class ModelPredictor:
             ]
         else:
             return [
-                "⚪ VERY LOW: Annual surveillance imaging sufficient",
+                " VERY LOW: Annual surveillance imaging sufficient",
                 "Annual AFP and liver function testing",
                 "Continue current management of liver disease",
                 "Maintain healthy lifestyle and medication compliance",
