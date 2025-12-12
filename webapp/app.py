@@ -924,7 +924,7 @@ class HCCPredictionSystem:
                 "model": self.predictor.get_model_info(),
                 "timestamp": pd.Timestamp.now().isoformat()
             })
-
+        
         @self.app.route('/api/feature-descriptions')
         def feature_descriptions():
             """Provide descriptions of clinical features for frontend help."""
