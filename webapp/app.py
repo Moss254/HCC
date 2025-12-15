@@ -514,7 +514,10 @@ class ModelPredictor:
             
             if hasattr(self.model, "predict_proba"):
                 probs = self.model.predict_proba(processed_features)[0]
-                recurrence_prob = probs[1] if len(probs) > 1 else probs[0]
+                # NOTE: In the training data, Class 1 = No Recurrence, Class 0 = Recurrence
+                # So probs[1] is probability of NO recurrence
+                # We need to report probability OF recurrence, which is probs[0]
+                recurrence_prob = probs[0] if len(probs) > 1 else probs[0]
             else:
                 recurrence_prob = float(prediction)
 
@@ -541,7 +544,7 @@ class ModelPredictor:
             result = {
                 "success": True,
                 "prediction": int(prediction),
-                "prediction_text": "Recurrence Likely" if prediction == 1 else "No Recurrence Expected",
+                "prediction_text": "No Recurrence Expected" if prediction == 1 else "Recurrence Likely",
                 "probability": float(recurrence_prob),
                 "confidence": f"{recurrence_prob * 100:.1f}%",
                 "risk_level": risk_level,
@@ -580,18 +583,14 @@ class ModelPredictor:
         """Generate detailed clinical explanation based on percentage."""
         percentage = probability * 100
         
-        if prediction == 1:
-            if percentage >= 80:
-                return f"VERY HIGH RISK ({percentage:.1f}%): Strong indicators present suggesting aggressive tumor characteristics. Multiple high-risk clinical and laboratory markers detected."
-            elif percentage >= 60:
-                return f"HIGH RISK ({percentage:.1f}%): Significant risk factors identified. Enhanced surveillance and consideration of adjuvant therapy strongly recommended."
-            else:
-                return f"MODERATE RISK ({percentage:.1f}%): Some concerning factors present. Close monitoring with regular imaging advised."
-        else:
-            if percentage <= 20:
-                return f"VERY LOW RISK ({percentage:.1f}%): Favorable prognostic indicators. Standard surveillance protocol is sufficient."
-            else:
-                return f"LOW RISK ({percentage:.1f}%): Minimal risk factors detected. Continue routine follow-up schedule."
+        # prediction: 0 = Recurrence, 1 = No Recurrence
+        # probability: probability of recurrence (Class 0)
+        if probability >= 0.7:  # High recurrence risk
+            return f"VERY HIGH RISK ({percentage:.1f}%): Strong indicators present suggesting aggressive tumor characteristics. Multiple high-risk clinical and laboratory markers detected."
+        elif probability >= 0.4:  # Medium recurrence risk
+            return f"MODERATE RISK ({percentage:.1f}%): Some concerning factors present. Close monitoring with regular imaging advised."
+        else:  # Low recurrence risk
+            return f"LOW RISK ({percentage:.1f}%): Favorable prognostic indicators. Standard surveillance protocol is sufficient."
 
     def _get_recommendations(self, probability: float) -> List[str]:
         """Generate probability-specific clinical recommendations."""
