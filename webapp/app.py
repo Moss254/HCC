@@ -38,15 +38,13 @@ class ModelPredictor:
         self.is_loaded = False
         self.shap_explainer = None
         self.feature_names = []
+        # Updated to only use the 17 base features collected by the form + 3 engineered features
         self.expected_features = [
-            'Obesity', 'Hallmark', 'HBeAg', 'Ferritin', 'CRI', 'Diabetes', 'TP', 
-            'Encephalopathy', 'PVT', 'PS', 'INR', 'Hemoglobin', 'Platelets', 
-            'Alcohol', 'Age', 'Total_Bil', 'Ascites', 'ALP', 'ALT', 'Symptoms', 
-            'Gender', 'HIV', 'Endemic', 'Sat', 'Smoking', 'HBcAb', 'Grams_day', 
-            'AFP', 'Nodule', 'Spleno', 'PHT', 'Iron', 'Cirrhosis', 'Albumin', 
-            'Major_Dim', 'AHT', 'Varices', 'Hemochro', 'HBsAg', 'HCVAb', 'GGT', 
-            'MCV', 'Dir_Bil', 'AST', 'Metastasis', 'Packs_year', 'Creatinine', 
-            'NASH', 'Leucocytes', 'Age_Category', 'AFP_Risk_Category', 'Liver_Function_Score'
+            'Age', 'Gender', 'Symptoms', 'PS',
+            'AFP', 'Albumin', 'Total_Bil', 'ALT', 'AST',
+            'Major_Dim', 'Nodule',
+            'Alcohol', 'HBsAg', 'HCVAb', 'Cirrhosis', 'Diabetes', 'Smoking',
+            'Age_Category', 'AFP_Risk_Category', 'Liver_Function_Score'
         ]
 
     def find_model_files(self, project_root):
@@ -188,7 +186,7 @@ class ModelPredictor:
         return df_normalized
 
     def engineer_features(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Feature engineering - matches training pipeline."""
+        """Feature engineering - matches training pipeline with only 17 base features."""
         try:
             # First normalize feature names
             df_eng = self.normalize_feature_names(df)
@@ -213,8 +211,8 @@ class ModelPredictor:
                 afp_cat[afp_vals > 400] = 2.0
                 df_eng['AFP_Risk_Category'] = afp_cat
 
-            # Liver function composite score
-            liver_markers = ['Albumin', 'Total_Bil', 'INR', 'ALT', 'AST']
+            # Liver function composite score - using only available markers from form
+            liver_markers = ['Albumin', 'Total_Bil', 'ALT', 'AST']
             available_markers = [m for m in liver_markers if m in df_eng.columns]
             
             if len(available_markers) >= 2:
@@ -222,9 +220,9 @@ class ModelPredictor:
                 for marker in available_markers:
                     val = df_eng[marker]
                     if marker == 'Albumin':
-                        s = 1.0 - (val / 5.5) 
+                        s = 1.0 - (val / 5.5)  # Lower is worse (inverse)
                     else:
-                        s = val / 100.0 
+                        s = val / 100.0  # Higher is worse
                     scores.append(s.fillna(0))
                 df_eng['Liver_Function_Score'] = pd.concat(scores, axis=1).mean(axis=1)
             else:
@@ -516,7 +514,10 @@ class ModelPredictor:
             
             if hasattr(self.model, "predict_proba"):
                 probs = self.model.predict_proba(processed_features)[0]
-                recurrence_prob = probs[1] if len(probs) > 1 else probs[0]
+                # NOTE: In the training data, Class 1 = No Recurrence, Class 0 = Recurrence
+                # So probs[1] is probability of NO recurrence
+                # We need to report probability OF recurrence, which is probs[0]
+                recurrence_prob = probs[0] if len(probs) > 1 else probs[0]
             else:
                 recurrence_prob = float(prediction)
 
@@ -543,7 +544,7 @@ class ModelPredictor:
             result = {
                 "success": True,
                 "prediction": int(prediction),
-                "prediction_text": "Recurrence Likely" if prediction == 1 else "No Recurrence Expected",
+                "prediction_text": "No Recurrence Expected" if prediction == 1 else "Recurrence Likely",
                 "probability": float(recurrence_prob),
                 "confidence": f"{recurrence_prob * 100:.1f}%",
                 "risk_level": risk_level,
@@ -582,18 +583,14 @@ class ModelPredictor:
         """Generate detailed clinical explanation based on percentage."""
         percentage = probability * 100
         
-        if prediction == 1:
-            if percentage >= 80:
-                return f"VERY HIGH RISK ({percentage:.1f}%): Strong indicators present suggesting aggressive tumor characteristics. Multiple high-risk clinical and laboratory markers detected."
-            elif percentage >= 60:
-                return f"HIGH RISK ({percentage:.1f}%): Significant risk factors identified. Enhanced surveillance and consideration of adjuvant therapy strongly recommended."
-            else:
-                return f"MODERATE RISK ({percentage:.1f}%): Some concerning factors present. Close monitoring with regular imaging advised."
-        else:
-            if percentage <= 20:
-                return f"VERY LOW RISK ({percentage:.1f}%): Favorable prognostic indicators. Standard surveillance protocol is sufficient."
-            else:
-                return f"LOW RISK ({percentage:.1f}%): Minimal risk factors detected. Continue routine follow-up schedule."
+        # prediction: 0 = Recurrence, 1 = No Recurrence
+        # probability: probability of recurrence (Class 0)
+        if probability >= 0.7:  # High recurrence risk
+            return f"VERY HIGH RISK ({percentage:.1f}%): Strong indicators present suggesting aggressive tumor characteristics. Multiple high-risk clinical and laboratory markers detected."
+        elif probability >= 0.4:  # Medium recurrence risk
+            return f"MODERATE RISK ({percentage:.1f}%): Some concerning factors present. Close monitoring with regular imaging advised."
+        else:  # Low recurrence risk
+            return f"LOW RISK ({percentage:.1f}%): Favorable prognostic indicators. Standard surveillance protocol is sufficient."
 
     def _get_recommendations(self, probability: float) -> List[str]:
         """Generate probability-specific clinical recommendations."""
