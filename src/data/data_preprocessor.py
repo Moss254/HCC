@@ -72,8 +72,8 @@ class HCCDataPreprocessor:
     
     def engineer_features(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-         clinically relevant derived features
-        Aligned with notebook feature engineering
+        Engineer clinically relevant derived features
+        UPDATED: Uses only the 17 base features collected by the form
         """
         df_eng = df.copy()
         
@@ -93,8 +93,8 @@ class HCCDataPreprocessor:
             afp_category[afp_vals > 400] = 2.0
             df_eng['AFP_Risk_Category'] = afp_category
         
-        # Liver function composite score
-        liver_markers = ['Albumin', 'Total_Bil', 'INR', 'ALT', 'AST']
+        # Liver function composite score - using only available markers from form
+        liver_markers = ['Albumin', 'Total_Bil', 'ALT', 'AST']
         available_markers = [marker for marker in liver_markers if marker in df_eng.columns]
         
         if len(available_markers) >= 2:
@@ -102,14 +102,25 @@ class HCCDataPreprocessor:
             liver_scores = []
             for marker in available_markers:
                 if marker == 'Albumin':
-                    # Higher albumin is better
-                    score = (df_eng[marker] - df_eng[marker].min()) / (df_eng[marker].max() - df_eng[marker].min())
+                    # Higher albumin is better - use safe normalization
+                    marker_range = df_eng[marker].max() - df_eng[marker].min()
+                    if marker_range > 0:
+                        score = (df_eng[marker] - df_eng[marker].min()) / marker_range
+                    else:
+                        score = 0.5  # Default to neutral if no variation
                 else:
                     # Lower values are better for other markers
-                    score = 1 - ((df_eng[marker] - df_eng[marker].min()) / (df_eng[marker].max() - df_eng[marker].min()))
+                    marker_range = df_eng[marker].max() - df_eng[marker].min()
+                    if marker_range > 0:
+                        score = 1 - ((df_eng[marker] - df_eng[marker].min()) / marker_range)
+                    else:
+                        score = 0.5  # Default to neutral if no variation
                 liver_scores.append(score)
             
             df_eng['Liver_Function_Score'] = np.mean(liver_scores, axis=0)
+        else:
+            # Default liver function score if not enough markers
+            df_eng['Liver_Function_Score'] = 0.0
         
         logger.info(f"Engineered features. Final shape: {df_eng.shape}")
         return df_eng

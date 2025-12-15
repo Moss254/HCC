@@ -127,7 +127,7 @@ class ModelPredictor:
             return False
 
     def engineer_features(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Feature engineering - matches training pipeline."""
+        """Feature engineering - matches training pipeline with only 17 base features."""
         try:
             df_eng = df.copy()
             
@@ -148,7 +148,8 @@ class ModelPredictor:
                 afp_cat[afp_vals > 400] = 2.0
                 df_eng['AFP_Risk_Category'] = afp_cat
 
-            liver_markers = ['Albumin', 'Total_Bil', 'INR', 'ALT', 'AST']
+            # Liver function composite score - using only available markers from form
+            liver_markers = ['Albumin', 'Total_Bil', 'ALT', 'AST']
             available_markers = [m for m in liver_markers if m in df_eng.columns]
             
             if len(available_markers) >= 2:
@@ -164,15 +165,13 @@ class ModelPredictor:
             else:
                 df_eng['Liver_Function_Score'] = 0.0
 
+            # Expected columns based on the 17 form features + 3 engineered features
             expected_columns = [
-                'Obesity', 'Hallmark', 'HBeAg', 'Ferritin', 'CRI', 'Diabetes', 'TP', 
-                'Encephalopathy', 'PVT', 'PS', 'INR', 'Hemoglobin', 'Platelets', 
-                'Alcohol', 'Age', 'Total_Bil', 'Ascites', 'ALP', 'ALT', 'Symptoms', 
-                'Gender', 'HIV', 'Endemic', 'Sat', 'Smoking', 'HBcAb', 'Grams_day', 
-                'AFP', 'Nodule', 'Spleno', 'PHT', 'Iron', 'Cirrhosis', 'Albumin', 
-                'Major_Dim', 'AHT', 'Varices', 'Hemochro', 'HBsAg', 'HCVAb', 'GGT', 
-                'MCV', 'Dir_Bil', 'AST', 'Metastasis', 'Packs_year', 'Creatinine', 
-                'NASH', 'Leucocytes', 'Age_Category', 'AFP_Risk_Category', 'Liver_Function_Score'
+                'Age', 'Gender', 'Symptoms', 'PS',
+                'AFP', 'Albumin', 'Total_Bil', 'ALT', 'AST',
+                'Major_Dim', 'Nodule',
+                'Alcohol', 'HBsAg', 'HCVAb', 'Cirrhosis', 'Diabetes', 'Smoking',
+                'Age_Category', 'AFP_Risk_Category', 'Liver_Function_Score'
             ]
 
             for col in expected_columns:
