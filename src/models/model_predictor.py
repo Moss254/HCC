@@ -186,8 +186,17 @@ class ModelPredictor:
                         else:
                             s = val / 100.0  # Higher is worse
                     
-                    scores.append(s.fillna(0) if hasattr(s, 'fillna') else s)
-                df_eng['Liver_Function_Score'] = pd.concat(scores, axis=1).mean(axis=1) if all(hasattr(s, 'fillna') for s in scores) else sum(scores) / len(scores)
+                    # Append score, handling both Series and scalar values
+                    if hasattr(s, 'fillna'):
+                        scores.append(s.fillna(0))
+                    else:
+                        scores.append(s)
+                
+                # Calculate mean of scores
+                if all(hasattr(s, 'values') for s in scores):
+                    df_eng['Liver_Function_Score'] = pd.concat(scores, axis=1).mean(axis=1)
+                else:
+                    df_eng['Liver_Function_Score'] = sum(s if isinstance(s, (int, float)) else s.iloc[0] for s in scores) / len(scores)
             else:
                 df_eng['Liver_Function_Score'] = 0.0
 

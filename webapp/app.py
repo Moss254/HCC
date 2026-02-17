@@ -47,6 +47,18 @@ class ModelPredictor:
             'Alcohol', 'HBsAg', 'HCVAb', 'Cirrhosis', 'Diabetes', 'Smoking',
             'Age_Category', 'AFP_Risk_Category', 'Liver_Function_Score'
         ]
+    
+    def _needs_shap_negation(self, shap_values) -> bool:
+        """Check if SHAP values need to be negated to explain Class 0.
+        
+        For tree-based models that return single SHAP arrays (not lists),
+        the values are for Class 1. We negate to explain Class 0 (Recurrence).
+        """
+        if isinstance(shap_values, list):
+            return False  # Already separated by class
+        
+        model_type = type(self.model).__name__ if hasattr(self, 'model') else type(self.classifier).__name__
+        return 'GradientBoosting' in model_type or 'RandomForest' in model_type
 
     def find_model_files(self, project_root):
         """Smartly searches for model files in common locations."""
@@ -249,8 +261,17 @@ class ModelPredictor:
                         else:
                             s = val / 100.0  # Higher is worse
                     
-                    scores.append(s.fillna(0) if hasattr(s, 'fillna') else s)
-                df_eng['Liver_Function_Score'] = pd.concat(scores, axis=1).mean(axis=1) if all(hasattr(s, 'fillna') for s in scores) else sum(scores) / len(scores)
+                    # Append score, handling both Series and scalar values
+                    if hasattr(s, 'fillna'):
+                        scores.append(s.fillna(0))
+                    else:
+                        scores.append(s)
+                
+                # Calculate mean of scores
+                if all(hasattr(s, 'values') for s in scores):
+                    df_eng['Liver_Function_Score'] = pd.concat(scores, axis=1).mean(axis=1)
+                else:
+                    df_eng['Liver_Function_Score'] = sum(s if isinstance(s, (int, float)) else s.iloc[0] for s in scores) / len(scores)
             else:
                 df_eng['Liver_Function_Score'] = 0.0
 
@@ -375,11 +396,8 @@ class ModelPredictor:
             # the values are in log-odds space for the model's positive output.
             # For GradientBoostingClassifier, this is the log-odds of Class 1.
             # Since we want to explain Class 0 (Recurrence), negate the values.
-            model_type = type(self.model).__name__ if hasattr(self, 'model') else type(self.classifier).__name__
-            negate_for_class_0 = False
-            if not isinstance(shap_values, list) and ('GradientBoosting' in model_type or 'RandomForest' in model_type):
-                # For these models, SHAP returns values for Class 1, but we want Class 0
-                negate_for_class_0 = True
+            negate_for_class_0 = self._needs_shap_negation(shap_values)
+            if negate_for_class_0:
                 base_value = -base_value
                 logger.info(f"Negated base value for Recurrence (Class 0): {base_value}")
             else:
