@@ -252,13 +252,13 @@ class ModelPredictor:
         """Extract scalar expected value from SHAP explainer."""
         if isinstance(expected_value, np.ndarray):
             if expected_value.size == 2:
-                # For binary classification, we want the positive class (class 1)
-                return float(expected_value[1])
+                # For binary classification, we want the recurrence class (class 0)
+                return float(expected_value[0])
             else:
                 return float(expected_value[0])
         elif isinstance(expected_value, list):
             if len(expected_value) == 2:
-                return float(expected_value[1])
+                return float(expected_value[0])
             else:
                 return float(expected_value[0])
         else:
@@ -272,18 +272,18 @@ class ModelPredictor:
         
         # Handle different SHAP value formats
         if isinstance(shap_values, list):
-            # For binary classification, shap_values is [negative_class, positive_class]
+            # For binary classification, shap_values is [class_0, class_1]
             if len(shap_values) == 2:
-                # Get positive class (class 1) values
-                pos_class = shap_values[1]
-                if hasattr(pos_class, 'shape') and len(pos_class.shape) == 2:
-                    return pos_class[sample_index]
-                elif hasattr(pos_class, 'shape') and len(pos_class.shape) == 1:
-                    return pos_class
+                # Get recurrence class (class 0) values
+                recurrence_class = shap_values[0]
+                if hasattr(recurrence_class, 'shape') and len(recurrence_class.shape) == 2:
+                    return recurrence_class[sample_index]
+                elif hasattr(recurrence_class, 'shape') and len(recurrence_class.shape) == 1:
+                    return recurrence_class
                 else:
                     # Try to convert to array
                     try:
-                        arr = np.array(pos_class)
+                        arr = np.array(recurrence_class)
                         if len(arr.shape) == 2:
                             return arr[sample_index]
                         return arr
@@ -299,7 +299,7 @@ class ModelPredictor:
             if len(shap_values.shape) == 3:
                 # Shape is (n_samples, n_features, n_classes)
                 if shap_values.shape[2] >= 2:
-                    return shap_values[sample_index, :, 1]  # Class 1
+                    return shap_values[sample_index, :, 0]  # Class 0 (Recurrence)
                 else:
                     return shap_values[sample_index, :, 0]
             elif len(shap_values.shape) == 2:

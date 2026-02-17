@@ -208,7 +208,7 @@ class ModelPredictor:
             if isinstance(shap_values, list):
                 # Binary classification - we have shap_values[0] and shap_values[1]
                 if len(shap_values) == 2:
-                    shap_values_positive = shap_values[1]  # Class 1 (Recurrence)
+                    shap_values_positive = shap_values[0]  # Class 0 (Recurrence)
                     if len(shap_values_positive.shape) == 2:
                         shap_values_positive = shap_values_positive[0]  # Take first sample
                     else:
@@ -228,7 +228,7 @@ class ModelPredictor:
             
             if isinstance(expected_value, np.ndarray) or isinstance(expected_value, list):
                 if len(expected_value) == 2:
-                    base_value = float(expected_value[1])  # Expected value for class 1
+                    base_value = float(expected_value[0])  # Expected value for class 0 (Recurrence)
                 else:
                     base_value = float(expected_value[0])
             else:
@@ -350,7 +350,7 @@ class ModelPredictor:
             
             if hasattr(self.model, "predict_proba"):
                 probs = self.model.predict_proba(processed_features)[0]
-                recurrence_prob = probs[1] if len(probs) > 1 else probs[0]
+                recurrence_prob = probs[0] if len(probs) > 1 else probs[0]
             else:
                 recurrence_prob = float(prediction)
 
@@ -372,7 +372,7 @@ class ModelPredictor:
             result = {
                 "success": True,
                 "prediction": int(prediction),
-                "prediction_text": "Recurrence Likely" if prediction == 1 else "No Recurrence Expected",
+                "prediction_text": "No Recurrence Expected" if prediction == 1 else "Recurrence Likely",
                 "probability": float(recurrence_prob),
                 "confidence": f"{recurrence_prob * 100:.1f}%",
                 "risk_level": risk_level,
