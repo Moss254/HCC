@@ -368,10 +368,22 @@ class ModelPredictor:
             expected_value = self.shap_explainer.expected_value
             logger.info(f"Expected value type: {type(expected_value)}, value: {expected_value}")
             
-            # Extract scalar base value for class 1 (recurrence)
+            # Extract scalar base value
             base_value = self._extract_shap_expected_value(expected_value)
             
-            logger.info(f"Using base value: {base_value}")
+            # For tree-based models that return single SHAP values (not a list),
+            # the values are in log-odds space for the model's positive output.
+            # For GradientBoostingClassifier, this is the log-odds of Class 1.
+            # Since we want to explain Class 0 (Recurrence), negate the values.
+            model_type = type(self.model).__name__ if hasattr(self, 'model') else type(self.classifier).__name__
+            negate_for_class_0 = False
+            if not isinstance(shap_values, list) and ('GradientBoosting' in model_type or 'RandomForest' in model_type):
+                # For these models, SHAP returns values for Class 1, but we want Class 0
+                negate_for_class_0 = True
+                base_value = -base_value
+                logger.info(f"Negated base value for Recurrence (Class 0): {base_value}")
+            else:
+                logger.info(f"Using base value: {base_value}")
             
             # Extract SHAP values for the single sample
             shap_values_single = self._extract_shap_values_single(shap_values, sample_index=0)
@@ -379,6 +391,11 @@ class ModelPredictor:
             if shap_values_single is None:
                 logger.error(f"Could not extract SHAP values from type: {type(shap_values)}")
                 return {"shap_available": False, "error": "Could not extract SHAP values"}
+            
+            # Negate SHAP values if needed (same condition as base_value negation)
+            if negate_for_class_0:
+                shap_values_single = -shap_values_single
+                logger.info(f"Negated SHAP values for Recurrence (Class 0)")
             
             logger.info(f"Extracted SHAP values shape: {shap_values_single.shape if hasattr(shap_values_single, 'shape') else 'no shape'}")
             

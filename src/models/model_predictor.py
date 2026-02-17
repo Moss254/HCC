@@ -242,11 +242,17 @@ class ModelPredictor:
                 else:
                     shap_values_positive = shap_values[0].flatten()
             else:
-                # Single array
+                # Single array - need to negate for Class 0
+                model_type = type(self.model).__name__
                 if len(shap_values.shape) == 2:
                     shap_values_positive = shap_values[0]
                 else:
                     shap_values_positive = shap_values.flatten()
+                
+                # For models that return single array, negate to explain Class 0
+                if 'GradientBoosting' in model_type or 'RandomForest' in model_type:
+                    shap_values_positive = -shap_values_positive
+                    logger.debug("Negated SHAP values for Recurrence (Class 0)")
             
             # Get expected value - handle array vs scalar
             expected_value = self.shap_explainer.expected_value
@@ -257,6 +263,10 @@ class ModelPredictor:
                     base_value = float(expected_value[0])  # Expected value for class 0 (Recurrence)
                 else:
                     base_value = float(expected_value[0])
+                    # Negate for single-output models explaining Class 0
+                    if not isinstance(shap_values, list) and ('GradientBoosting' in model_type or 'RandomForest' in model_type):
+                        base_value = -base_value
+                        logger.debug(f"Negated base value for Recurrence (Class 0): {base_value}")
             else:
                 base_value = float(expected_value)
             
