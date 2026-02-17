@@ -57,7 +57,12 @@ class ModelPredictor:
         if isinstance(shap_values, list):
             return False  # Already separated by class
         
-        model_type = type(self.model).__name__ if hasattr(self, 'model') else type(self.classifier).__name__
+        # Safety check: ensure model or classifier exists
+        if not hasattr(self, 'model') or self.model is None:
+            if not hasattr(self, 'classifier') or self.classifier is None:
+                return False  # Cannot determine, assume no negation needed
+        
+        model_type = type(self.model).__name__ if hasattr(self, 'model') and self.model else type(self.classifier).__name__
         return 'GradientBoosting' in model_type or 'RandomForest' in model_type
 
     def find_model_files(self, project_root):
@@ -271,7 +276,18 @@ class ModelPredictor:
                 if all(hasattr(s, 'values') for s in scores):
                     df_eng['Liver_Function_Score'] = pd.concat(scores, axis=1).mean(axis=1)
                 else:
-                    df_eng['Liver_Function_Score'] = sum(s if isinstance(s, (int, float)) else s.iloc[0] for s in scores) / len(scores)
+                    # Handle mixed scalar/Series values safely
+                    scalar_scores = []
+                    for s in scores:
+                        if isinstance(s, (int, float)):
+                            scalar_scores.append(s)
+                        elif hasattr(s, 'iloc') and len(s) > 0:
+                            scalar_scores.append(float(s.iloc[0]))
+                        elif hasattr(s, 'item'):
+                            scalar_scores.append(float(s.item()))
+                        else:
+                            scalar_scores.append(0.0)  # Fallback
+                    df_eng['Liver_Function_Score'] = sum(scalar_scores) / len(scalar_scores) if scalar_scores else 0.0
             else:
                 df_eng['Liver_Function_Score'] = 0.0
 

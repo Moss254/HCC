@@ -196,7 +196,18 @@ class ModelPredictor:
                 if all(hasattr(s, 'values') for s in scores):
                     df_eng['Liver_Function_Score'] = pd.concat(scores, axis=1).mean(axis=1)
                 else:
-                    df_eng['Liver_Function_Score'] = sum(s if isinstance(s, (int, float)) else s.iloc[0] for s in scores) / len(scores)
+                    # Handle mixed scalar/Series values safely
+                    scalar_scores = []
+                    for s in scores:
+                        if isinstance(s, (int, float)):
+                            scalar_scores.append(s)
+                        elif hasattr(s, 'iloc') and len(s) > 0:
+                            scalar_scores.append(float(s.iloc[0]))
+                        elif hasattr(s, 'item'):
+                            scalar_scores.append(float(s.item()))
+                        else:
+                            scalar_scores.append(0.0)  # Fallback
+                    df_eng['Liver_Function_Score'] = sum(scalar_scores) / len(scalar_scores) if scalar_scores else 0.0
             else:
                 df_eng['Liver_Function_Score'] = 0.0
 
