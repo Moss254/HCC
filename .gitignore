@@ -37,3 +37,8 @@ Thumbs.db
 # Project specific
 *.log
 .env
+
+# Models (large binary files)
+models/trained_models/*.pkl
+models/preprocessing/*.pkl
+models/trained_models/*.json
