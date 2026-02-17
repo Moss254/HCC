@@ -38,6 +38,7 @@ class ModelPredictor:
         self.is_loaded = False
         self.shap_explainer = None
         self.feature_names = []
+        self.liver_norm_stats = None  # Store training-time liver function normalization stats
         # Updated to only use the 17 base features collected by the form + 3 engineered features
         self.expected_features = [
             'Age', 'Gender', 'Symptoms', 'PS',
@@ -120,6 +121,9 @@ class ModelPredictor:
             if isinstance(preprocessor_data, dict):
                 self.preprocessor = preprocessor_data.get('pipeline')
                 self.feature_names = preprocessor_data.get('feature_names', [])
+                self.liver_norm_stats = preprocessor_data.get('liver_norm_stats', None)
+                if self.liver_norm_stats:
+                    logger.info(f" Loaded liver normalization stats from training")
             else:
                 self.preprocessor = preprocessor_data
                 # Try to extract feature names from preprocessor
@@ -219,12 +223,34 @@ class ModelPredictor:
                 scores = []
                 for marker in available_markers:
                     val = df_eng[marker]
-                    if marker == 'Albumin':
-                        s = 1.0 - (val / 5.5)  # Lower is worse (inverse)
+                    
+                    # Use training-time stats if available, otherwise use fixed-scale normalization
+                    if self.liver_norm_stats and marker in self.liver_norm_stats:
+                        stats = self.liver_norm_stats[marker]
+                        marker_min = stats['min']
+                        marker_range = stats['range']
+                        
+                        if marker == 'Albumin':
+                            # Higher albumin is better
+                            if marker_range > 0:
+                                s = (val - marker_min) / marker_range
+                            else:
+                                s = 0.5
+                        else:
+                            # Lower values are better for other markers
+                            if marker_range > 0:
+                                s = 1 - ((val - marker_min) / marker_range)
+                            else:
+                                s = 0.5
                     else:
-                        s = val / 100.0  # Higher is worse
-                    scores.append(s.fillna(0))
-                df_eng['Liver_Function_Score'] = pd.concat(scores, axis=1).mean(axis=1)
+                        # Fallback to fixed-scale normalization (old behavior)
+                        if marker == 'Albumin':
+                            s = 1.0 - (val / 5.5)  # Lower is worse (inverse)
+                        else:
+                            s = val / 100.0  # Higher is worse
+                    
+                    scores.append(s.fillna(0) if hasattr(s, 'fillna') else s)
+                df_eng['Liver_Function_Score'] = pd.concat(scores, axis=1).mean(axis=1) if all(hasattr(s, 'fillna') for s in scores) else sum(scores) / len(scores)
             else:
                 df_eng['Liver_Function_Score'] = 0.0
 
