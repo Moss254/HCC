@@ -56,12 +56,43 @@ Hepatocellular Carcinoma has a high recurrence rate (50-70% within 5 years). Ear
 
 - Python 3.8 or higher
 - pip (Python package manager)
+- (Optional) [Visual Studio Code](https://code.visualstudio.com/) - Recommended IDE
+
+### Quick Start with VS Code (Recommended)
+
+For the best development experience, we recommend using Visual Studio Code:
+
+1. **Clone and Open in VS Code**
+   ```bash
+   git clone https://github.com/Moss254/HCC.git
+   cd HCC
+   code .
+   ```
+
+2. **Install Recommended Extensions**
+   - VS Code will prompt you to install recommended extensions
+   - Click "Install All" to get Python, debugging, and other helpful tools
+
+3. **Set Up Python Environment**
+   - Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on Mac)
+   - Type "Python: Create Environment" and select it
+   - Choose "Venv" and select your Python interpreter
+   - VS Code will automatically install dependencies from `requirements.txt`
+
+4. **Run the Application**
+   - Press `F5` to start debugging, or
+   - Press `Ctrl+Shift+P` → "Tasks: Run Task" → "Run Flask Server"
+   - Open browser to `http://localhost:8000`
+
+📖 **See [VSCODE_SETUP.md](VSCODE_SETUP.md) for detailed VS Code setup instructions**
+
+### Manual Installation (Alternative)
 
 ### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/Moss254/moss. git
-cd moss
+git clone https://github.com/Moss254/HCC.git
+cd HCC
 ```
 
 ### Step 2: Create Virtual Environment (Recommended)

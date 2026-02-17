@@ -2,38 +2,96 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Python Debugger: Current File",
+      "name": "Flask: webapp",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "flask",
+      "env": {
+        "FLASK_APP": "webapp.app",
+        "FLASK_ENV": "development",
+        "FLASK_DEBUG": "1"
+      },
+      "args": [
+        "run",
+        "--host=0.0.0.0",
+        "--port=8000",
+        "--no-debugger",
+        "--no-reload"
+      ],
+      "jinja": true,
+      "justMyCode": true,
+      "console": "integratedTerminal",
+      "python": "${workspaceFolder}/venv/bin/python"
+    },
+    {
+      "name": "Python: Run Application",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/run.py",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "python": "${workspaceFolder}/venv/bin/python",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Python: Current File",
       "type": "debugpy",
       "request": "launch",
       "program": "${file}",
-      "console": "integratedTerminal"
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "python": "${workspaceFolder}/venv/bin/python"
     },
     {
-      "name": "Python Debugger: Current File",
+      "name": "Python: Debug Tests",
       "type": "debugpy",
       "request": "launch",
-      "program": "${file}",
-      "console": "integratedTerminal"
+      "module": "pytest",
+      "args": [
+        "-v",
+        "-s"
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "python": "${workspaceFolder}/venv/bin/python"
     },
-
     {
-      "name": "C/C++ Runner: Debug Session",
-      "type": "cppdbg",
+      "name": "Python: Debug Current Test",
+      "type": "debugpy",
       "request": "launch",
-      "args": [],
-      "stopAtEntry": false,
-      "externalConsole": true,
-      "cwd": "c:/Users/livewave/hcc_recurrence_prediction_system",
-      "program": "c:/Users/livewave/hcc_recurrence_prediction_system/build/Debug/outDebug",
-      "MIMode": "gdb",
-      "miDebuggerPath": "gdb",
-      "setupCommands": [
-        {
-          "description": "Enable pretty-printing for gdb",
-          "text": "-enable-pretty-printing",
-          "ignoreFailures": true
-        }
-      ]
+      "module": "pytest",
+      "args": [
+        "${file}",
+        "-v",
+        "-s"
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "python": "${workspaceFolder}/venv/bin/python"
+    },
+    {
+      "name": "Python: Debug Test Function",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": [
+        "${file}::${selectedText}",
+        "-v",
+        "-s"
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "python": "${workspaceFolder}/venv/bin/python"
+    },
+    {
+      "name": "Python: Model Training",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/models/model_trainer.py",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "python": "${workspaceFolder}/venv/bin/python",
+      "cwd": "${workspaceFolder}"
     }
   ]
 }
