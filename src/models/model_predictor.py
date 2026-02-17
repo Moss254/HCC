@@ -59,16 +59,88 @@ class ModelPredictor:
         
         return None, None
 
-    def _initialize_shap_explainer(self):
+    def _load_background_data(self, project_root: str) -> np.ndarray:
+        """Load and preprocess a sample of training data for SHAP background."""
+        try:
+            # Try to find training data
+            data_paths = [
+                os.path.join(project_root, "data", "raw", "hcc-data-complete-balanced.xlsx"),
+                os.path.join(project_root, "data", "HCC_data.xlsx"),
+            ]
+            
+            # Expected base features (17 base + 3 engineered = 20 total after preprocessing)
+            expected_base_features = [
+                'Age', 'Gender', 'Symptoms', 'PS',
+                'AFP', 'Albumin', 'Total_Bil', 'ALT', 'AST',
+                'Major_Dim', 'Nodule', 'Nodules',  # Include both for compatibility
+                'Alcohol', 'HBsAg', 'HCVAb', 'Cirrhosis', 'Diabetes', 'Smoking'
+            ]
+            
+            for data_path in data_paths:
+                if os.path.exists(data_path):
+                    logger.info(f" Loading background data from: {data_path}")
+                    df = pd.read_excel(data_path)
+                    
+                    # Remove target column if present
+                    if 'Class' in df.columns:
+                        df = df.drop('Class', axis=1)
+                    
+                    # Select only expected features (ignore extra columns)
+                    available_features = [f for f in expected_base_features if f in df.columns]
+                    df = df[available_features]
+                    
+                    # Apply feature engineering
+                    df_eng = self.engineer_features(df)
+                    
+                    # Preprocess
+                    X_processed = self.preprocessor.transform(df_eng)
+                    
+                    # Sample a subset for background
+                    n_background = min(100, len(X_processed))
+                    background = shap.sample(X_processed, n_background)
+                    
+                    logger.info(f" Loaded background data: {background.shape}")
+                    return background
+            
+            # If no data file found, return None
+            logger.warning(" No training data found for background - using synthetic data")
+            return None
+            
+        except Exception as e:
+            logger.warning(f" Failed to load background data: {e}")
+            return None
+
+    def _initialize_shap_explainer(self, project_root: str = '.'):
         """Initialize SHAP explainer based on model type."""
         try:
             model_type = type(self.model).__name__
             logger.info(f"Initializing SHAP for model type: {model_type}")
             
             if 'RandomForest' in model_type or 'XGB' in model_type or 'GradientBoosting' in model_type:
-                # Tree-based models use TreeExplainer
-                self.shap_explainer = shap.TreeExplainer(self.model)
-                logger.info(" SHAP TreeExplainer initialized")
+                # Tree-based models use TreeExplainer with probability output
+                # Need to provide background data for interventional perturbation
+                try:
+                    # Try to load real training data for background
+                    background = self._load_background_data(project_root)
+                    
+                    if background is None:
+                        # Fallback to synthetic background
+                        n_features = len(self.feature_names) if self.feature_names else 20
+                        background = shap.sample(np.zeros((50, n_features)), 50)
+                        logger.warning(" Using synthetic background data (all zeros)")
+                    
+                    self.shap_explainer = shap.TreeExplainer(
+                        self.model,
+                        background,
+                        model_output="probability",
+                        feature_perturbation="interventional"
+                    )
+                    logger.info(" SHAP TreeExplainer initialized with probability output")
+                except Exception as inner_e:
+                    # Fallback to raw output if probability output fails
+                    logger.warning(f"Could not initialize with probability output: {inner_e}")
+                    self.shap_explainer = shap.TreeExplainer(self.model)
+                    logger.info(" SHAP TreeExplainer initialized with raw output (fallback)")
             elif 'Linear' in model_type or 'Logistic' in model_type:
                 # For linear models - use KernelExplainer as fallback
                 background = shap.sample(np.zeros((50, len(self.feature_names))), 50)
@@ -117,7 +189,7 @@ class ModelPredictor:
             logger.info(f" Loaded {len(self.feature_names)} feature names")
 
             # Initialize SHAP explainer
-            self._initialize_shap_explainer()
+            self._initialize_shap_explainer(project_root)
             
             self.is_loaded = True
             logger.info(" System Loaded Successfully with SHAP explainer.")
