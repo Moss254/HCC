@@ -602,6 +602,10 @@ class ModelPredictor:
                 result["shap_plot"] = shap_data["shap_plot"]
                 result["top_features"] = shap_data["top_features"]
                 result["feature_interpretation"] = self._generate_feature_interpretation(shap_data["top_features"])
+                result["shap_debug"] = {
+                    "base_value": shap_data.get("base_value"),
+                    "features_analyzed": shap_data.get("features_analyzed", 0)
+                }
             else:
                 result["shap_available"] = False
                 result["shap_error"] = shap_data.get("error", "SHAP not available")
