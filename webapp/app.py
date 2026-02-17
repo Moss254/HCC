@@ -38,6 +38,7 @@ class ModelPredictor:
         self.is_loaded = False
         self.shap_explainer = None
         self.feature_names = []
+        self.liver_norm_stats = None  # Store training-time liver function normalization stats
         # Updated to only use the 17 base features collected by the form + 3 engineered features
         self.expected_features = [
             'Age', 'Gender', 'Symptoms', 'PS',
@@ -46,6 +47,23 @@ class ModelPredictor:
             'Alcohol', 'HBsAg', 'HCVAb', 'Cirrhosis', 'Diabetes', 'Smoking',
             'Age_Category', 'AFP_Risk_Category', 'Liver_Function_Score'
         ]
+    
+    def _needs_shap_negation(self, shap_values) -> bool:
+        """Check if SHAP values need to be negated to explain Class 0.
+        
+        For tree-based models that return single SHAP arrays (not lists),
+        the values are for Class 1. We negate to explain Class 0 (Recurrence).
+        """
+        if isinstance(shap_values, list):
+            return False  # Already separated by class
+        
+        # Safety check: ensure model or classifier exists
+        if not hasattr(self, 'model') or self.model is None:
+            if not hasattr(self, 'classifier') or self.classifier is None:
+                return False  # Cannot determine, assume no negation needed
+        
+        model_type = type(self.model).__name__ if hasattr(self, 'model') and self.model else type(self.classifier).__name__
+        return 'GradientBoosting' in model_type or 'RandomForest' in model_type
 
     def find_model_files(self, project_root):
         """Smartly searches for model files in common locations."""
@@ -120,6 +138,9 @@ class ModelPredictor:
             if isinstance(preprocessor_data, dict):
                 self.preprocessor = preprocessor_data.get('pipeline')
                 self.feature_names = preprocessor_data.get('feature_names', [])
+                self.liver_norm_stats = preprocessor_data.get('liver_norm_stats', None)
+                if self.liver_norm_stats:
+                    logger.info(f" Loaded liver normalization stats from training")
             else:
                 self.preprocessor = preprocessor_data
                 # Try to extract feature names from preprocessor
@@ -219,12 +240,54 @@ class ModelPredictor:
                 scores = []
                 for marker in available_markers:
                     val = df_eng[marker]
-                    if marker == 'Albumin':
-                        s = 1.0 - (val / 5.5)  # Lower is worse (inverse)
+                    
+                    # Use training-time stats if available, otherwise use fixed-scale normalization
+                    if self.liver_norm_stats and marker in self.liver_norm_stats:
+                        stats = self.liver_norm_stats[marker]
+                        marker_min = stats['min']
+                        marker_range = stats['range']
+                        
+                        if marker == 'Albumin':
+                            # Higher albumin is better
+                            if marker_range > 0:
+                                s = (val - marker_min) / marker_range
+                            else:
+                                s = 0.5
+                        else:
+                            # Lower values are better for other markers
+                            if marker_range > 0:
+                                s = 1 - ((val - marker_min) / marker_range)
+                            else:
+                                s = 0.5
                     else:
-                        s = val / 100.0  # Higher is worse
-                    scores.append(s.fillna(0))
-                df_eng['Liver_Function_Score'] = pd.concat(scores, axis=1).mean(axis=1)
+                        # Fallback to fixed-scale normalization (old behavior)
+                        if marker == 'Albumin':
+                            s = 1.0 - (val / 5.5)  # Lower is worse (inverse)
+                        else:
+                            s = val / 100.0  # Higher is worse
+                    
+                    # Append score, handling both Series and scalar values
+                    if hasattr(s, 'fillna'):
+                        scores.append(s.fillna(0))
+                    else:
+                        scores.append(s)
+                
+                # Calculate mean of scores
+                if all(hasattr(s, 'values') for s in scores):
+                    df_eng['Liver_Function_Score'] = pd.concat(scores, axis=1).mean(axis=1)
+                else:
+                    # Handle mixed scalar/Series values safely
+                    scalar_scores = []
+                    for s in scores:
+                        if isinstance(s, (int, float)):
+                            scalar_scores.append(s)
+                        elif hasattr(s, 'iloc') and len(s) > 0:
+                            scalar_scores.append(float(s.iloc[0]))
+                        elif hasattr(s, 'item'):
+                            scalar_scores.append(float(s.item()))
+                        else:
+                            scalar_scores.append(0.0)  # Fallback
+                    df_eng['Liver_Function_Score'] = sum(scalar_scores) / len(scalar_scores) if scalar_scores else 0.0
             else:
                 df_eng['Liver_Function_Score'] = 0.0
 
@@ -252,13 +315,13 @@ class ModelPredictor:
         """Extract scalar expected value from SHAP explainer."""
         if isinstance(expected_value, np.ndarray):
             if expected_value.size == 2:
-                # For binary classification, we want the positive class (class 1)
-                return float(expected_value[1])
+                # For binary classification, we want the recurrence class (class 0)
+                return float(expected_value[0])
             else:
                 return float(expected_value[0])
         elif isinstance(expected_value, list):
             if len(expected_value) == 2:
-                return float(expected_value[1])
+                return float(expected_value[0])
             else:
                 return float(expected_value[0])
         else:
@@ -272,18 +335,18 @@ class ModelPredictor:
         
         # Handle different SHAP value formats
         if isinstance(shap_values, list):
-            # For binary classification, shap_values is [negative_class, positive_class]
+            # For binary classification, shap_values is [class_0, class_1]
             if len(shap_values) == 2:
-                # Get positive class (class 1) values
-                pos_class = shap_values[1]
-                if hasattr(pos_class, 'shape') and len(pos_class.shape) == 2:
-                    return pos_class[sample_index]
-                elif hasattr(pos_class, 'shape') and len(pos_class.shape) == 1:
-                    return pos_class
+                # Get recurrence class (class 0) values
+                recurrence_class = shap_values[0]
+                if hasattr(recurrence_class, 'shape') and len(recurrence_class.shape) == 2:
+                    return recurrence_class[sample_index]
+                elif hasattr(recurrence_class, 'shape') and len(recurrence_class.shape) == 1:
+                    return recurrence_class
                 else:
                     # Try to convert to array
                     try:
-                        arr = np.array(pos_class)
+                        arr = np.array(recurrence_class)
                         if len(arr.shape) == 2:
                             return arr[sample_index]
                         return arr
@@ -299,7 +362,7 @@ class ModelPredictor:
             if len(shap_values.shape) == 3:
                 # Shape is (n_samples, n_features, n_classes)
                 if shap_values.shape[2] >= 2:
-                    return shap_values[sample_index, :, 1]  # Class 1
+                    return shap_values[sample_index, :, 0]  # Class 0 (Recurrence)
                 else:
                     return shap_values[sample_index, :, 0]
             elif len(shap_values.shape) == 2:
@@ -342,10 +405,19 @@ class ModelPredictor:
             expected_value = self.shap_explainer.expected_value
             logger.info(f"Expected value type: {type(expected_value)}, value: {expected_value}")
             
-            # Extract scalar base value for class 1 (recurrence)
+            # Extract scalar base value
             base_value = self._extract_shap_expected_value(expected_value)
             
-            logger.info(f"Using base value: {base_value}")
+            # For tree-based models that return single SHAP values (not a list),
+            # the values are in log-odds space for the model's positive output.
+            # For GradientBoostingClassifier, this is the log-odds of Class 1.
+            # Since we want to explain Class 0 (Recurrence), negate the values.
+            negate_for_class_0 = self._needs_shap_negation(shap_values)
+            if negate_for_class_0:
+                base_value = -base_value
+                logger.info(f"Negated base value for Recurrence (Class 0): {base_value}")
+            else:
+                logger.info(f"Using base value: {base_value}")
             
             # Extract SHAP values for the single sample
             shap_values_single = self._extract_shap_values_single(shap_values, sample_index=0)
@@ -353,6 +425,11 @@ class ModelPredictor:
             if shap_values_single is None:
                 logger.error(f"Could not extract SHAP values from type: {type(shap_values)}")
                 return {"shap_available": False, "error": "Could not extract SHAP values"}
+            
+            # Negate SHAP values if needed (same condition as base_value negation)
+            if negate_for_class_0:
+                shap_values_single = -shap_values_single
+                logger.info(f"Negated SHAP values for Recurrence (Class 0)")
             
             logger.info(f"Extracted SHAP values shape: {shap_values_single.shape if hasattr(shap_values_single, 'shape') else 'no shape'}")
             
@@ -559,6 +636,10 @@ class ModelPredictor:
                 result["shap_plot"] = shap_data["shap_plot"]
                 result["top_features"] = shap_data["top_features"]
                 result["feature_interpretation"] = self._generate_feature_interpretation(shap_data["top_features"])
+                result["shap_debug"] = {
+                    "base_value": shap_data.get("base_value"),
+                    "features_analyzed": shap_data.get("features_analyzed", 0)
+                }
             else:
                 result["shap_available"] = False
                 result["shap_error"] = shap_data.get("error", "SHAP not available")

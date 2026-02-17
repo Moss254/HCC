@@ -29,6 +29,7 @@ class ModelPredictor:
         self.is_loaded = False
         self.shap_explainer = None
         self.feature_names = []
+        self.liver_norm_stats = None  # Store training-time liver function normalization stats
 
     def find_model_files(self, project_root):
         """Smartly searches for model files in common locations."""
@@ -102,6 +103,9 @@ class ModelPredictor:
             if isinstance(preprocessor_data, dict):
                 self.preprocessor = preprocessor_data.get('pipeline')
                 self.feature_names = preprocessor_data.get('feature_names', [])
+                self.liver_norm_stats = preprocessor_data.get('liver_norm_stats', None)
+                if self.liver_norm_stats:
+                    logger.info(f" Loaded liver normalization stats from training")
             else:
                 self.preprocessor = preprocessor_data
                 # Try to extract feature names from preprocessor
@@ -156,12 +160,54 @@ class ModelPredictor:
                 scores = []
                 for marker in available_markers:
                     val = df_eng[marker]
-                    if marker == 'Albumin':
-                        s = 1.0 - (val / 5.5) 
+                    
+                    # Use training-time stats if available, otherwise use fixed-scale normalization
+                    if self.liver_norm_stats and marker in self.liver_norm_stats:
+                        stats = self.liver_norm_stats[marker]
+                        marker_min = stats['min']
+                        marker_range = stats['range']
+                        
+                        if marker == 'Albumin':
+                            # Higher albumin is better
+                            if marker_range > 0:
+                                s = (val - marker_min) / marker_range
+                            else:
+                                s = 0.5
+                        else:
+                            # Lower values are better for other markers
+                            if marker_range > 0:
+                                s = 1 - ((val - marker_min) / marker_range)
+                            else:
+                                s = 0.5
                     else:
-                        s = val / 100.0 
-                    scores.append(s.fillna(0))
-                df_eng['Liver_Function_Score'] = pd.concat(scores, axis=1).mean(axis=1)
+                        # Fallback to fixed-scale normalization (old behavior)
+                        if marker == 'Albumin':
+                            s = 1.0 - (val / 5.5)  # Lower is worse (inverse)
+                        else:
+                            s = val / 100.0  # Higher is worse
+                    
+                    # Append score, handling both Series and scalar values
+                    if hasattr(s, 'fillna'):
+                        scores.append(s.fillna(0))
+                    else:
+                        scores.append(s)
+                
+                # Calculate mean of scores
+                if all(hasattr(s, 'values') for s in scores):
+                    df_eng['Liver_Function_Score'] = pd.concat(scores, axis=1).mean(axis=1)
+                else:
+                    # Handle mixed scalar/Series values safely
+                    scalar_scores = []
+                    for s in scores:
+                        if isinstance(s, (int, float)):
+                            scalar_scores.append(s)
+                        elif hasattr(s, 'iloc') and len(s) > 0:
+                            scalar_scores.append(float(s.iloc[0]))
+                        elif hasattr(s, 'item'):
+                            scalar_scores.append(float(s.item()))
+                        else:
+                            scalar_scores.append(0.0)  # Fallback
+                    df_eng['Liver_Function_Score'] = sum(scalar_scores) / len(scalar_scores) if scalar_scores else 0.0
             else:
                 df_eng['Liver_Function_Score'] = 0.0
 
@@ -208,7 +254,7 @@ class ModelPredictor:
             if isinstance(shap_values, list):
                 # Binary classification - we have shap_values[0] and shap_values[1]
                 if len(shap_values) == 2:
-                    shap_values_positive = shap_values[1]  # Class 1 (Recurrence)
+                    shap_values_positive = shap_values[0]  # Class 0 (Recurrence)
                     if len(shap_values_positive.shape) == 2:
                         shap_values_positive = shap_values_positive[0]  # Take first sample
                     else:
@@ -216,11 +262,17 @@ class ModelPredictor:
                 else:
                     shap_values_positive = shap_values[0].flatten()
             else:
-                # Single array
+                # Single array - need to negate for Class 0
+                model_type = type(self.model).__name__
                 if len(shap_values.shape) == 2:
                     shap_values_positive = shap_values[0]
                 else:
                     shap_values_positive = shap_values.flatten()
+                
+                # For models that return single array, negate to explain Class 0
+                if 'GradientBoosting' in model_type or 'RandomForest' in model_type:
+                    shap_values_positive = -shap_values_positive
+                    logger.debug("Negated SHAP values for Recurrence (Class 0)")
             
             # Get expected value - handle array vs scalar
             expected_value = self.shap_explainer.expected_value
@@ -228,9 +280,13 @@ class ModelPredictor:
             
             if isinstance(expected_value, np.ndarray) or isinstance(expected_value, list):
                 if len(expected_value) == 2:
-                    base_value = float(expected_value[1])  # Expected value for class 1
+                    base_value = float(expected_value[0])  # Expected value for class 0 (Recurrence)
                 else:
                     base_value = float(expected_value[0])
+                    # Negate for single-output models explaining Class 0
+                    if not isinstance(shap_values, list) and ('GradientBoosting' in model_type or 'RandomForest' in model_type):
+                        base_value = -base_value
+                        logger.debug(f"Negated base value for Recurrence (Class 0): {base_value}")
             else:
                 base_value = float(expected_value)
             
@@ -350,7 +406,7 @@ class ModelPredictor:
             
             if hasattr(self.model, "predict_proba"):
                 probs = self.model.predict_proba(processed_features)[0]
-                recurrence_prob = probs[1] if len(probs) > 1 else probs[0]
+                recurrence_prob = probs[0] if len(probs) > 1 else probs[0]
             else:
                 recurrence_prob = float(prediction)
 
@@ -372,7 +428,7 @@ class ModelPredictor:
             result = {
                 "success": True,
                 "prediction": int(prediction),
-                "prediction_text": "Recurrence Likely" if prediction == 1 else "No Recurrence Expected",
+                "prediction_text": "No Recurrence Expected" if prediction == 1 else "Recurrence Likely",
                 "probability": float(recurrence_prob),
                 "confidence": f"{recurrence_prob * 100:.1f}%",
                 "risk_level": risk_level,

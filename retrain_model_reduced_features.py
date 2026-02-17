@@ -55,27 +55,42 @@ def engineer_features(df):
     # Liver function composite score
     liver_markers = ['Albumin', 'Total_Bil', 'ALT', 'AST']
     liver_scores = []
+    liver_norm_stats = {}
     
     for marker in liver_markers:
         if marker == 'Albumin':
             # Higher albumin is better
-            marker_range = df_eng[marker].max() - df_eng[marker].min()
+            marker_min = df_eng[marker].min()
+            marker_max = df_eng[marker].max()
+            marker_range = marker_max - marker_min
+            liver_norm_stats[marker] = {
+                'min': float(marker_min),
+                'max': float(marker_max),
+                'range': float(marker_range)
+            }
             if marker_range > 0:
-                score = (df_eng[marker] - df_eng[marker].min()) / marker_range
+                score = (df_eng[marker] - marker_min) / marker_range
             else:
                 score = pd.Series([0.5] * len(df_eng))
         else:
             # Lower values are better for other markers
-            marker_range = df_eng[marker].max() - df_eng[marker].min()
+            marker_min = df_eng[marker].min()
+            marker_max = df_eng[marker].max()
+            marker_range = marker_max - marker_min
+            liver_norm_stats[marker] = {
+                'min': float(marker_min),
+                'max': float(marker_max),
+                'range': float(marker_range)
+            }
             if marker_range > 0:
-                score = 1 - ((df_eng[marker] - df_eng[marker].min()) / marker_range)
+                score = 1 - ((df_eng[marker] - marker_min) / marker_range)
             else:
                 score = pd.Series([0.5] * len(df_eng))
         liver_scores.append(score)
     
     df_eng['Liver_Function_Score'] = pd.DataFrame(liver_scores).T.mean(axis=1)
     
-    return df_eng
+    return df_eng, liver_norm_stats
 
 def main():
     print("=" * 80)
@@ -115,7 +130,8 @@ def main():
     
     # Engineer features
     logger.info("Engineering features...")
-    X_eng = engineer_features(X)
+    X_eng, liver_norm_stats = engineer_features(X)
+    logger.info(f"Saved liver normalization stats: {liver_norm_stats}")
     
     # Get all feature names (base + engineered)
     all_features = BASE_FEATURES + ['Age_Category', 'AFP_Risk_Category', 'Liver_Function_Score']
@@ -219,6 +235,7 @@ def main():
         'feature_names': all_features,
         'feature_count': len(all_features),
         'fitted': True,
+        'liver_norm_stats': liver_norm_stats,
         'config': {
             'base_features': BASE_FEATURES,
             'engineered_features': ['Age_Category', 'AFP_Risk_Category', 'Liver_Function_Score'],
